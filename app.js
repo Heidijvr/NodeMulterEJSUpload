@@ -2,6 +2,8 @@ const express = require("express");
 const multer = require("multer");
 const ejs = require ("ejs");
 const path = require("path");
+// var aws = require('aws-sdk')
+// var multerS3 = require('multer-s3')
 
 // Set storage Engine (multer)
 const storage = multer.diskStorage({
@@ -20,6 +22,11 @@ const upload = multer({
     }
 }).single("myImage");
 // Single indicates single image
+
+let s3 = new aws.S3({
+    accessKeyId: process.env.S3_KEY,
+    secretAccessKey: process.env.S3_SECRET
+  });
 
 // Check File Type
 function checkFileType(file, cb) {
