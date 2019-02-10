@@ -2,16 +2,24 @@ const express = require("express");
 const multer = require("multer");
 const ejs = require ("ejs");
 const path = require("path");
-// var aws = require('aws-sdk')
-// var multerS3 = require('multer-s3')
+var aws = require('aws-sdk');
+var multerS3 = require('multer-s3');
+
+let s3 = new aws.S3({
+    accessKeyId: process.env.S3_KEY,
+    secretAccessKey: process.env.S3_SECRET
+  });
 
 // Set storage Engine (multer)
-const storage = multer.diskStorage({
-    destination: "./public/uploads/",
-    filename: function(req, file, cb) {
-        cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+const storage = multerS3({
+    s3: s3,
+    bucket: 'node-images1',
+    acl: "public-read",
+    contentType: multerS3.AUTO_CONTENT_TYPE,   
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString() + "-" + file.originalname)
     }
-});
+  });
 
 // Init Upload
 const upload = multer({
@@ -21,12 +29,7 @@ const upload = multer({
        checkFileType(file, cb); 
     }
 }).single("myImage");
-// Single indicates single image
 
-let s3 = new aws.S3({
-    accessKeyId: process.env.S3_KEY,
-    secretAccessKey: process.env.S3_SECRET
-  });
 
 // Check File Type
 function checkFileType(file, cb) {
@@ -54,29 +57,31 @@ app.set("view engine", "ejs");
 // Public folder
 app.use(express.static("./public"));
 
-app.get("/", (req, res) => res.render("index"));
+app.get("/", function(req, res) {
+    res.render("index")
+});
 
 
 // Can also get info req.file in put in database, then use home route to do a fetch
-app.post("/upload", (req, res) => {
-   upload(req, res, (err) => {
+app.post("/upload", function(req, res) {
+   upload(req, res, function(err) {
        if(err) {
            res.render("index", {
               msg: err 
             });
        } else {
-        //    console.log(req.file);
-        //    res.send("test");
-        if(req.file == undefined) {
-            res.render("index", {
-                msg: "Error: No File Selected!"  
-            });
-        } else {
-            res.render("index", {
-                msg: "File Uploaded!",
-                file: `uploads/${req.file.filename}`
-            });
-        }
+           console.log(req.file);
+        
+            if(req.file == undefined) {
+                res.render("index", {
+                    msg: "Error: No File Selected!"  
+                });
+            } else {
+                res.render("index", {
+                    msg: "File Uploaded!",
+                    file: req.file.location
+                });
+            }
         }
    });
 });
