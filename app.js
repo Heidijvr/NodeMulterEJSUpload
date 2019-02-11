@@ -4,6 +4,7 @@ const ejs = require ("ejs");
 const path = require("path");
 var aws = require('aws-sdk');
 var multerS3 = require('multer-s3');
+var Sequelize = require("sequelize")
 
 let s3 = new aws.S3({
     accessKeyId: process.env.S3_KEY,
@@ -28,7 +29,7 @@ const upload = multer({
     fileFilter: function(req, file, cb) {
        checkFileType(file, cb); 
     }
-}).single("myImage");
+}).single();
 
 
 // Check File Type
@@ -62,7 +63,6 @@ app.get("/", function(req, res) {
 });
 
 
-// Can also get info req.file in put in database, then use home route to do a fetch
 app.post("/upload", function(req, res) {
    upload(req, res, function(err) {
        if(err) {
