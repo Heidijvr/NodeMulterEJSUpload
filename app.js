@@ -6,6 +6,15 @@ var aws = require('aws-sdk');
 var multerS3 = require('multer-s3');
 var Sequelize = require("sequelize")
 
+require("dotenv").config();
+
+// Image upload
+if (!process.env.S3_KEY) {
+    console.log("No S3 Key available, image uplaods won't work");
+} else {
+    console.log("Using S3 key: " + process.env.S3_KEY);
+}
+
 let s3 = new aws.S3({
     accessKeyId: process.env.S3_KEY,
     secretAccessKey: process.env.S3_SECRET
@@ -29,7 +38,7 @@ const upload = multer({
     fileFilter: function(req, file, cb) {
        checkFileType(file, cb); 
     }
-}).single();
+}).single("myImage");
 
 
 // Check File Type
